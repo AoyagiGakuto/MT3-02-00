@@ -8,6 +8,7 @@ const char kWindowTitle[] = "LE2D_02_アオヤギ_ガクト_確認課題";
 #define M_PI 3.14159265358979323846f
 #endif
 
+
 struct Vector3 {
     float x, y, z;
 };
