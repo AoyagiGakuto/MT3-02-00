@@ -8,7 +8,6 @@ const char kWindowTitle[] = "LE2D_02_アオヤギ_ガクト_確認課題";
 #define M_PI 3.14159265358979323846f
 #endif
 
-// -------------------- 構造体 --------------------
 struct Vector3 {
     float x, y, z;
 };
@@ -27,7 +26,6 @@ struct Sphere {
     float radius;
 };
 
-// -------------------- ベクトル --------------------
 Vector3 Add(const Vector3& a, const Vector3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
 Vector3 Subtract(const Vector3& a, const Vector3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
 Vector3 Multiply(const Vector3& v, float s) { return { v.x * s, v.y * s, v.z * s }; }
@@ -51,7 +49,6 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
     return Add(segment.origin, Multiply(segment.diff, t));
 }
 
-// -------------------- 行列 --------------------
 Matrix4x4 MultiplyMatrix(const Matrix4x4& a, const Matrix4x4& b)
 {
     Matrix4x4 r {};
@@ -116,7 +113,6 @@ Vector3 Transform(const Vector3& v, const Matrix4x4& m)
     return { x, y, z };
 }
 
-// -------------------- 描画 --------------------
 void DrawGrid(const Matrix4x4& viewProj, const Matrix4x4& viewport)
 {
     const float half = 2.0f;
@@ -182,11 +178,16 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& vp, const Matrix4x4& view
     }
 }
 
-// -------------------- メイン --------------------
+// Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+
+    // ライブラリの初期化
     Novice::Initialize(kWindowTitle, 1280, 720);
-    char keys[256] = {}, preKeys[256] = {};
+
+    // キー入力結果を受け取る箱
+    char keys[256] = { 0 };
+    char preKeys[256] = { 0 };
 
     Vector3 cameraT = { 0.2f, -8.0f, 20.0f };
     Vector3 cameraR = { 0.4f, 3.15f, 0.0f };
@@ -194,15 +195,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     Vector3 point { -1.5f, -0.3f, 0.6f };
     Matrix4x4 viewport = MakeViewportForMatrix(0, 0, 1280, 720, 0, 1);
 
+    // ウィンドウの×ボタンが押されるまでループ
     while (Novice::ProcessMessage() == 0) {
+        // フレームの開始
         Novice::BeginFrame();
+
+        // キー入力を受け取る
         memcpy(preKeys, keys, 256);
         Novice::GetHitKeyStateAll(keys);
+
+        ///
+        /// ↓更新処理ここから
+        ///
 
         Matrix4x4 vp = MakeViewProjectionMatrix(cameraT, cameraR);
         Vector3 v = Subtract(point, segment.origin);
         Vector3 project = Project(v, segment.diff);
         Vector3 closest = ClosestPoint(point, segment);
+
+        ///
+        /// ↑更新処理ここまで
+        ///
+
+        ///
+        /// ↓描画処理ここから
+        ///
 
         ImGui::Begin("Window");
         ImGui::DragFloat3("Point", &point.x, 0.01f);
@@ -216,15 +233,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         DrawGrid(vp, viewport);
         DrawSegment(segment, vp, viewport, WHITE);
 
-        // 点を球で描画（赤：基準点、黒：最近接点）
         DrawSphere({ point, 0.01f }, vp, viewport, RED);
         DrawSphere({ closest, 0.01f }, vp, viewport, BLACK);
 
+        ///
+        /// ↑描画処理ここまで
+        ///
+
+        // フレームの終了
         Novice::EndFrame();
-        if (preKeys[DIK_ESCAPE] == 0 && keys[DIK_ESCAPE] != 0)
+
+        // ESCキーが押されたらループを抜ける
+        if (preKeys[DIK_ESCAPE] == 0 && keys[DIK_ESCAPE] != 0) {
             break;
+        }
     }
 
+    // ライブラリの終了
     Novice::Finalize();
     return 0;
 }
